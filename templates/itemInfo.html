@@ -1,0 +1,18 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+
+<div class="row">
+	<div class="col-lg-12">
+		<h2>{{ item.name }} - <span class="h5">{{ category_name }}</span></h2>
+	</div>
+	<div class="col-lg-12">
+		<p>{{ item.description }}</p>
+	</div>
+	<div class="col-lg-12">
+		<a class="" href="{{url_for('editItem', category_name=category_name, item_name = item.name)}}">Edit</a>
+		<a class="" href="{{url_for('deleteItem', category_name=category_name, item_name = item.name)}}">Delete</a>
+	</div>
+</div>
+
+{% endblock %}
