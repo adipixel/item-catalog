@@ -1,17 +1,22 @@
 <div class="row">
 	<div class="col-xs-12">
+		<h3 class="">
+			<a class="btn btn-primary" href="{{url_for('addCategory')}}">Add Category</a>
+			<a class="btn btn-primary" href="{{url_for('addItem')}}">Add Item</a>
+		</h3>
+	</div>
+	<div class="col-xs-12">
 		<h4>Categories</h4>
 	</div>
 
 </div>
-{% for category in categories %}
-	<a href = "{{url_for('catalogItems', category_name = category.name)}}">
-		<div class="row">
-			<div class="col-md-1"></div>
-				<div class="col-md-10">
-					<h5>{{category.name}}</h5>
-				</div>
-			<div class="col-md-1"></div>
+<div class="row">
+	<div class="col-xs-12">
+		<div class="list-group">
+			<a href="{{url_for('showCategories')}}" class="list-group-item">All</a>
+			{% for category in categories %}
+			<a href = "{{url_for('catalogItems', category_name = category.name)}}" class="list-group-item">{{category.name}}</a>
+			{% endfor %}
 		</div>
-	</a>
-{% endfor %}
+	</div>
+</div>

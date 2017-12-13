@@ -17,12 +17,19 @@
 			<textarea class="form-control" name="desc">{{ item.description }}</textarea>
 		</div>
 		<div class="form-group">
+			<label for="image">Image Url</label>
+			<input class="form-control" type="text" value="{{ item.image }}" name="image">
+		</div>
+		<div class="form-group">
 			<button class="btn btn-primary" type="submit" name="submit"> Save </button>
-			<a class="btn" href="{{url_for('itemsInfo', category_name=category_name, item_name=item.name)}}">Cancel</a>
+			<a class="btn btn-default" href="{{url_for('itemsInfo', item_name=item.name)}}">Cancel</a>
 		</div>
 
 
 	</form>
+	<div class="col-lg-6">
+		<img src="{{ item.image }}" class="img-responsive" alt="{{ item.name }}">
+	</div>
 </div>
 
 {% endblock %}

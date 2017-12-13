@@ -3,30 +3,34 @@
 {% include "header.html" %}
 
 <div class="row">
-	<div class="col-lg-4">
+	<div class="col-lg-3">
 		{% include "categoryList.html" %}
 	</div>
-	<div class="col-lg-8">
-		<div class="row">
-			<div class="col-xs-12">
+	<div class="col-lg-9">
+		<div class="row padding-bottom padding-top">
+			<div class="col-xs-8">
 				<h4>{{ category.name }}</h4>
 			</div>
-			<div class="col-xs-12">
-				<a href="{{ url_for('editCategory', category_name = category.name) }}">Edit</a>
-				<a href="{{ url_for('deleteCategory', category_name = category.name) }}">Delete</a>
+			<div class="col-xs-4 text-right">
+				<a class="btn btn-info" href="{{ url_for('editCategory', category_name = category.name) }}">Edit</a>
+				<a class="btn btn-danger" href="{{ url_for('deleteCategory', category_name = category.name) }}">Delete</a>
 			</div>
 		</div>
+		<div class="row">
 		{% for item in items %}
-			<a href = "{{url_for('itemsInfo', category_name = category.name, item_name = item.name)}}">
-				<div class="row">
-					<div class="col-md-1"></div>
-						<div class="col-md-10">
-							<h5>{{item.name}}</h5>
-						</div>
-					<div class="col-md-1"></div>
-				</div>
-			</a>
+
+			  <div class="col-xs-12 col-sm-6 col-md-4">
+			    <div class="thumbnail">
+			      <img src="{{item.image}}" alt="...">
+			      <div class="caption">
+			        <h3>{{item.name}}</h3>
+			        <p><a href="{{url_for('itemsInfo', item_name = item.name)}}" class="btn btn-primary" role="button">Details</a> </p>
+			      </div>
+			    </div>
+			  </div>
+			
 		{% endfor %}
+		</div>
 	</div>
 </div>
 
