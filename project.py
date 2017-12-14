@@ -41,6 +41,7 @@ def showLogin():
     # return "The current session state is %s" % login_session['state']
     return render_template('login.html', STATE=state)
 
+
 # Logging in user using oAuth
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
@@ -135,13 +136,16 @@ def gdisconnect():
     access_token = login_session.get('access_token')
     if access_token is None:
         print 'Access Token is None'
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(
+            json.dumps(
+                'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     print 'In gdisconnect access token is %s', access_token
     print 'User name is: '
     print login_session['username']
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s'
+    % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print 'result is '
@@ -152,16 +156,16 @@ def gdisconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        #response = make_response(json.dumps('Successfully disconnected.'), 200)
-        #response.headers['Content-Type'] = 'application/json'
-        #return response
         return redirect(url_for('showCategories'))
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(
+            json.dumps(
+                'Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
 # ------------------------------------------
+
 
 # Retriving list of categories
 @app.route('/')
@@ -175,7 +179,8 @@ def showCategories():
     cat = session.query(Category).all()
     items = session.query(Item).all()
     return render_template(
-        "index.html", categories=cat, items=items, loginFlag=loginFlag, loggedUser=loggedUser)
+        "index.html", categories=cat, items=items,
+        loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Retriving list of items
@@ -192,7 +197,8 @@ def catalogItems(category_name):
     categories = session.query(Category).all()
     # return jsonify(items=[i.serialize for i in items])
     return render_template(
-        "itemDetails.html", categories=categories, category=cat, items=items, loginFlag=loginFlag, loggedUser=loggedUser)
+        "itemDetails.html", categories=categories, category=cat,
+        items=items, loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # item information
@@ -204,9 +210,10 @@ def itemsInfo(item_name):
         loggedUser = {'name': login_session['username']}
         loginFlag = True
     item = session.query(Item).filter_by(name=item_name).one()
-    category = session.query(Category).filter_by(id = item.category_id).one()
+    category = session.query(Category).filter_by(id=item.category_id).one()
     return render_template(
-        "itemInfo.html", category_name=category.name, item=item, loginFlag=loginFlag, loggedUser=loggedUser)
+        "itemInfo.html", category_name=category.name, item=item,
+        loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Editing item
@@ -229,10 +236,14 @@ def editItem(category_name, item_name):
         item.image = request.form['image']
         session.commit()
         # flash("Item updated sucessfully")
-        return redirect(url_for('itemsInfo', item_name=item.name, loginFlag=loginFlag, loggedUser=loggedUser))
+        return redirect(
+            url_for(
+                'itemsInfo', item_name=item.name,
+                loginFlag=loginFlag, loggedUser=loggedUser))
     else:
         return render_template(
-            "editItem.html", category_name=category_name, item=item, loginFlag=loginFlag, loggedUser=loggedUser)
+            "editItem.html", category_name=category_name, item=item,
+            loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Deleting an item
@@ -252,10 +263,13 @@ def deleteItem(category_name, item_name):
         session.delete(item)
         session.commit()
         # flash("Item deleted sucessfully")
-        return redirect(url_for('catalogItems', category_name=category_name, loginFlag=loginFlag, loggedUser=loggedUser))
+        return redirect(url_for(
+            'catalogItems', category_name=category_name,
+            loginFlag=loginFlag, loggedUser=loggedUser))
     else:
         return render_template(
-            "deleteItem.html", category_name=category_name, item=item, loginFlag=loginFlag, loggedUser=loggedUser)
+            "deleteItem.html", category_name=category_name,
+            item=item, loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Adding new item
@@ -273,13 +287,15 @@ def addItem():
             id=request.form['category']).one()
         newItem = Item(
             name=request.form['name'], description=request.form[
-                'desc'], image = request.form['image'], category=category)
+                'desc'], image=request.form['image'], category=category)
         session.add(newItem)
         session.commit()
         return redirect(url_for('showCategories'))
     else:
         categories = session.query(Category).all()
-        return render_template('addItem.html', categories=categories, loginFlag=loginFlag, loggedUser=loggedUser)
+        return render_template(
+            'addItem.html', categories=categories,
+            loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Adding new category
@@ -298,7 +314,9 @@ def addCategory():
         session.commit()
         return redirect(url_for('showCategories'))
     else:
-        return render_template('addCategory.html', loginFlag=loginFlag, loggedUser=loggedUser)
+        return render_template(
+            'addCategory.html',
+            loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Editing category
@@ -319,7 +337,10 @@ def editCategory(category_name):
         # flash("Item updated sucessfully")
         return redirect(url_for('showCategories'))
     else:
-        return render_template("editCategory.html", category=category, loginFlag=loginFlag, loggedUser=loggedUser)
+        return render_template(
+            "editCategory.html", category=category,
+            loginFlag=loginFlag, loggedUser=loggedUser)
+
 
 # Deleting category
 @app.route('/catalog/<string:category_name>/delete/', methods=['GET', 'POST'])
@@ -338,7 +359,9 @@ def deleteCategory(category_name):
         # flash("Item updated sucessfully")
         return redirect(url_for('showCategories'))
     else:
-        return render_template("deleteCategory.html", category=category, loginFlag=loginFlag, loggedUser=loggedUser)
+        return render_template(
+            "deleteCategory.html", category=category,
+            loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # JSON api for categories
