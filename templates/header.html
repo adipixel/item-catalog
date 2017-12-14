@@ -2,13 +2,14 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-6">
-				<a href="{{url_for('showCategories')}}">
+				<a class="link" href="{{url_for('showCategories')}}">
 					<span class="glyphicon glyphicon-home" aria-hidden="true"></span>  Home
 				</a>
 			</div>
 			<div class="col-md-6 text-right">
 				{% if loginFlag %}
-				<span class="padding-right">{{ loggedUser.name }}</span>
+				<span class="padding-right">{{ loggedUser.name }}  </span>
+				<a class="btn link" href="{{ url_for('showLogin') }}">Switch Account </a>
 				<a class="btn btn-default" href="{{ url_for('gdisconnect') }}">Logout</a>
 				{% else %}
 				<a class="btn btn-default" href="{{ url_for('showLogin') }}">Login </a>
