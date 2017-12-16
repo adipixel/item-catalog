@@ -3,7 +3,7 @@ from flask import redirect, jsonify, url_for, flash
 
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Category, Item
+from database_setup import Base, Category, Item, User
 
 from flask import session as login_session
 import random
@@ -116,6 +116,11 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    user_id = getUserID(login_session['email'])
+    if user_id is None:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
     output = ''
     output += '<img class=" img-circle" src="'
     output += login_session['picture']
@@ -155,6 +160,7 @@ def gdisconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
+        del login_session['user_id']
         return redirect(url_for('showCategories'))
     else:
         response = make_response(
@@ -162,6 +168,31 @@ def gdisconnect():
                 'Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
+
+
+# User Helper Functions
+
+
+def createUser(login_session):
+    newUser = User(name=login_session['username'], email=login_session[
+                   'email'], picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
 
 # ------------------------------------------
 
@@ -188,7 +219,7 @@ def catalogItems(category_name):
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     cat = session.query(Category).filter_by(name=category_name).one()
     items = session.query(Item).filter_by(
@@ -206,7 +237,7 @@ def itemsInfo(item_name):
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     item = session.query(Item).filter_by(name=item_name).one()
     category = session.query(Category).filter_by(id=item.category_id).one()
@@ -216,16 +247,18 @@ def itemsInfo(item_name):
 
 
 # Editing item
-@app.route('/catalog/<string:category_name>/<string:item_name>/edit', methods=[
-    'GET', 'POST'])
+@app.route(
+    '/catalog/<string:category_name>/<string:item_name>/edit',
+    methods=['GET', 'POST'])
 def editItem(category_name, item_name):
     if 'username' not in login_session:
         return redirect('/login')
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
+
     category = session.query(Category).filter_by(name=category_name).one()
     item = session.query(Item).filter_by(
         name=item_name, category_id=category.id).one()
@@ -253,7 +286,7 @@ def deleteItem(category_name, item_name):
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     category = session.query(Category).filter_by(name=category_name).one()
     item = session.query(Item).filter_by(
@@ -279,14 +312,17 @@ def addItem():
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     if request.method == 'POST':
         category = session.query(Category).filter_by(
             id=request.form['category']).one()
         newItem = Item(
-            name=request.form['name'], description=request.form[
-                'desc'], image=request.form['image'], category=category)
+            name=request.form['name'],
+            description=request.form['desc'],
+            image=request.form['image'],
+            category=category,
+            user_id=login_session['user_id'])
         session.add(newItem)
         session.commit()
         return redirect(url_for('showCategories'))
@@ -305,10 +341,11 @@ def addCategory():
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     if request.method == 'POST':
-        newCategory = Category(name=request.form['name'])
+        newCategory = Category(
+            name=request.form['name'], user_id=login_session['user_id'])
         session.add(newCategory)
         session.commit()
         return redirect(url_for('showCategories'))
@@ -327,7 +364,7 @@ def editCategory(category_name):
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     category = session.query(Category).filter_by(name=category_name).one()
     if request.method == 'POST':
@@ -342,14 +379,15 @@ def editCategory(category_name):
 
 
 # Deleting category
-@app.route('/catalog/<string:category_name>/delete/', methods=['GET', 'POST'])
+@app.route(
+    '/catalog/<string:category_name>/delete/', methods=['GET', 'POST'])
 def deleteCategory(category_name):
     if 'username' not in login_session:
         return redirect('/login')
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
-        loggedUser = {'name': login_session['username']}
+        loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
     category = session.query(Category).filter_by(name=category_name).one()
     if request.method == 'POST':
@@ -371,7 +409,7 @@ def catalogJSON():
 
 
 # JSON api for items form a category
-@app.route('/catalog/<string:category_name>/JSON')
+@app.route('/catalog/<string:category_name>/items/JSON')
 def categoryJSON(category_name):
     cat = session.query(Category).filter_by(name=category_name).one()
     items = session.query(Item).filter_by(category_id=cat.id)
@@ -381,18 +419,17 @@ def categoryJSON(category_name):
 # JSON api for item details
 @app.route('/catalog/<string:category_name>/<string:item_name>/JSON')
 def itemJSON(category_name, item_name):
-    cat = session.query(Category).filter_by(name=category_name).one()
-    items = session.query(Item).filter_by(category_id=cat.id, name=item_name)
-    return jsonify(itemInfo=[i.serialize for i in items])
+    category = session.query(Category).filter_by(name=category_name).one()
+    items = session.query(Item).filter_by(
+        category_id=category.id, name=item_name).one()
+    return jsonify(itemInfo=items.serialize)
 
 
 # JSON APIs to view Category Information
-@app.route('/catalog/<int:category_id>/list/JSON')
-def categoryListJSON(category_id):
-    cat = session.query(Category).filter_by(id=category_id).one()
-    items = session.query(Item).filter_by(
-        category_id=category_id).all()
-    return jsonify(items=[i.serialize for i in items])
+@app.route('/catalog/<string:category_name>/info/JSON')
+def categoryInfoJSON(category_name):
+    category = session.query(Category).filter_by(name=category_name).one()
+    return jsonify(category.serialize)
 
 
 if __name__ == '__main__':

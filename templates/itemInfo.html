@@ -6,8 +6,10 @@
 	<div class="col-lg-6">
 		<h2>{{ item.name }} - <span class="h5">{{ category_name }}</span></h2>
 		<p>{{ item.description }}</p>
+		{% if loggedUser.id == item.user_id %}
 		<a class="btn btn-info" href="{{url_for('editItem', category_name=category_name, item_name = item.name)}}">Edit</a>
 		<a class="btn btn-danger" href="{{url_for('deleteItem', category_name=category_name, item_name = item.name)}}">Delete</a>
+		{% endif %}
 	</div>
 	<div class="col-lg-6">
 		<img src="{{ item.image }}" class="img-responsive" alt="{{ item.name }}">
