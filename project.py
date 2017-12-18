@@ -248,7 +248,7 @@ def itemsInfo(item_name):
 
 # Editing item
 @app.route(
-    '/catalog/<string:category_name>/<string:item_name>/edit',
+    '/catalog/<string:category_name>/<string:item_name>/edit/',
     methods=['GET', 'POST'])
 def editItem(category_name, item_name):
     if 'username' not in login_session:
@@ -259,23 +259,28 @@ def editItem(category_name, item_name):
         loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
 
-    category = session.query(Category).filter_by(name=category_name).one()
-    item = session.query(Item).filter_by(
-        name=item_name, category_id=category.id).one()
-    if request.method == 'POST':
-        item.name = request.form['name']
-        item.description = request.form['desc']
-        item.image = request.form['image']
-        session.commit()
-        # flash("Item updated sucessfully")
-        return redirect(
-            url_for(
-                'itemsInfo', item_name=item.name,
-                loginFlag=loginFlag, loggedUser=loggedUser))
-    else:
-        return render_template(
-            "editItem.html", category_name=category_name, item=item,
-            loginFlag=loginFlag, loggedUser=loggedUser)
+        category = session.query(Category).filter_by(name=category_name).one()
+        item = session.query(Item).filter_by(
+            name=item_name, category_id=category.id).one()
+        if request.method == 'POST':
+            # authorization double check
+            if loggedUser.id == category.user_id:
+                item.name = request.form['name']
+                item.description = request.form['desc']
+                item.image = request.form['image']
+                session.commit()
+                # flash("Item updated sucessfully")
+                return redirect(
+                    url_for(
+                        'itemsInfo', item_name=item.name,
+                        loginFlag=loginFlag, loggedUser=loggedUser))
+            else:
+                return '''You are not authorized to perform this action!
+                <a href="/">Home</a>'''
+        else:
+            return render_template(
+                "editItem.html", category_name=category_name, item=item,
+                loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Deleting an item
@@ -283,25 +288,32 @@ def editItem(category_name, item_name):
     '/catalog/<string:category_name>/<string:item_name>/delete', methods=[
         'GET', 'POST'])
 def deleteItem(category_name, item_name):
+    if 'username' not in login_session:
+        return redirect('/login')
     loggedUser = {}
     loginFlag = False
     if 'username' in login_session:
         loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
-    category = session.query(Category).filter_by(name=category_name).one()
-    item = session.query(Item).filter_by(
-        name=item_name, category_id=category.id).one()
-    if request.method == 'POST':
-        session.delete(item)
-        session.commit()
-        # flash("Item deleted sucessfully")
-        return redirect(url_for(
-            'catalogItems', category_name=category_name,
-            loginFlag=loginFlag, loggedUser=loggedUser))
-    else:
-        return render_template(
-            "deleteItem.html", category_name=category_name,
-            item=item, loginFlag=loginFlag, loggedUser=loggedUser)
+        category = session.query(Category).filter_by(name=category_name).one()
+        item = session.query(Item).filter_by(
+            name=item_name, category_id=category.id).one()
+        if request.method == 'POST':
+            # authorization double check
+            if loggedUser.id == category.user_id:
+                session.delete(item)
+                session.commit()
+                # flash("Item deleted sucessfully")
+                return redirect(url_for(
+                    'catalogItems', category_name=category_name,
+                    loginFlag=loginFlag, loggedUser=loggedUser))
+            else:
+                return '''You are not authorized to perform this action!
+                <a href="/">Home</a>'''
+        else:
+            return render_template(
+                "deleteItem.html", category_name=category_name,
+                item=item, loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Adding new item
@@ -366,16 +378,21 @@ def editCategory(category_name):
     if 'username' in login_session:
         loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
-    category = session.query(Category).filter_by(name=category_name).one()
-    if request.method == 'POST':
-        category.name = request.form['name']
-        session.commit()
-        # flash("Item updated sucessfully")
-        return redirect(url_for('showCategories'))
-    else:
-        return render_template(
-            "editCategory.html", category=category,
-            loginFlag=loginFlag, loggedUser=loggedUser)
+        category = session.query(Category).filter_by(name=category_name).one()
+        if request.method == 'POST':
+            # authorization double check
+            if loggedUser.id == category.user_id:
+                category.name = request.form['name']
+                session.commit()
+                # flash("Item updated sucessfully")
+                return redirect(url_for('showCategories'))
+            else:
+                return '''You are not authorized to perform this action!
+                <a href="/">Home</a>'''
+        else:
+            return render_template(
+                "editCategory.html", category=category,
+                loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # Deleting category
@@ -389,16 +406,21 @@ def deleteCategory(category_name):
     if 'username' in login_session:
         loggedUser = getUserInfo(login_session['user_id'])
         loginFlag = True
-    category = session.query(Category).filter_by(name=category_name).one()
-    if request.method == 'POST':
-        session.delete(category)
-        session.commit()
-        # flash("Item updated sucessfully")
-        return redirect(url_for('showCategories'))
-    else:
-        return render_template(
-            "deleteCategory.html", category=category,
-            loginFlag=loginFlag, loggedUser=loggedUser)
+        category = session.query(Category).filter_by(name=category_name).one()
+        if request.method == 'POST':
+            # authorization double check
+            if loggedUser.id == category.user_id:
+                session.delete(category)
+                session.commit()
+            # flash("Item updated sucessfully")
+                return redirect(url_for('showCategories'))
+            else:
+                return '''You are not authorized to perform this action!
+                <a href="/">Home</a>'''
+        else:
+            return render_template(
+                "deleteCategory.html", category=category,
+                loginFlag=loginFlag, loggedUser=loggedUser)
 
 
 # JSON api for categories
